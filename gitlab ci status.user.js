@@ -1,29 +1,95 @@
 // ==UserScript==
 // @name     GitLab CI job status
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
-// @include  http*://gitlab.*/*/pipelines
+// @include  http://gitlab.ad.corelogic.asia/*/pipelines
 // @include  https://gitlab.com/*/pipelines
-// @version  0.1
+// @version  0.2
 // @grant    GM.xmlHttpRequest
 // ==/UserScript==
 
 
 const module = {
-    draw(icon, n) {
-        const dim = 32;
+  fill: (() => {
+    const colors = {
+      '$green-50': '#f1fdf6',
+      '$green-100': '#dcf5e7',
+      '$green-200': '#b3e6c8',
+      '$green-300': '#75d09b',
+      '$green-400': '#37b96d',
+      '$green-500': '#1aaa55',
+      '$green-600': '#168f48',
+      '$green-700': '#12753a',
+      '$green-800': '#0e5a2d',
+      '$green-900': '#0a4020',
+      '$green-950': '#072b15',
 
-        var canvas = document.createElement('canvas');
-        canvas.width = canvas.height = dim;
-        var ctx = canvas.getContext('2d');
+      '$blue-50': '#f6fafe',
+      '$blue-100': '#e4f0fb',
+      '$blue-200': '#b8d6f4',
+      '$blue-300': '#73afea',
+      '$blue-400': '#2e87e0',
+      '$blue-500': '#1f78d1',
+      '$blue-600': '#1b69b6',
+      '$blue-700': '#17599c',
+      '$blue-800': '#134a81',
+      '$blue-900': '#0f3b66',
+      '$blue-950': '#0a2744',
 
-        const fill = {
-            status_running: 'blue',
-            status_success: 'green',
-            status_pending: 'orange',
-            status_failed: 'red',
-        }
+      '$orange-50': '#fffaf4',
+      '$orange-100': '#fff1de',
+      '$orange-200': '#fed69f',
+      '$orange-300': '#fdbc60',
+      '$orange-400': '#fca121',
+      '$orange-500': '#fc9403',
+      '$orange-600': '#de7e00',
+      '$orange-700': '#c26700',
+      '$orange-800': '#a35200',
+      '$orange-900': '#853c00',
+      '$orange-950': '#592800',
 
-        var data = `
+      '$red-50': '#fef6f5',
+      '$red-100': '#fbe5e1',
+      '$red-200': '#f2b4a9',
+      '$red-300': '#e67664',
+      '$red-400': '#e05842',
+      '$red-500': '#db3b21',
+      '$red-600': '#c0341d',
+      '$red-700': '#a62d19',
+      '$red-800': '#8b2615',
+      '$red-900': '#711e11',
+      '$red-950': '#4b140b',
+      
+      '$gray-darkest': '#c4c4c4',
+      '$text-color': '#2e2e2e',
+    };
+
+    const statusColors = {
+      status_success: '$green-600',
+      status_failed: '$red-600',
+      status_pending: '$orange-600',
+      status_success_with_warnings: '$orange-600',
+      status_running: '$blue-600',
+      status_canceled: '$text-color',
+      status_disabled: '$text-color',
+      status_notfound: '$text-color',
+      status_manual: '$text-color',
+      status_created: '$gray-darkest',
+      status_skipped: '$gray-darkest',
+    };
+    
+    return Object.keys(statusColors)
+	    .reduce((acc, status) => ({...acc, [status]: colors[statusColors[status]]}), {});
+  })(),
+  
+  draw(icon, n) {
+    const dim = 32;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = canvas.height = dim;
+    var ctx = canvas.getContext('2d');
+
+
+    var data = `
 <svg width="${dim}" height="${dim}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <symbol viewBox="0 0 16 16" id="abuse"><path d="M11.408.328l4.029 3.222A1.5 1.5 0 0 1 16 4.72v6.555a1.5 1.5 0 0 1-.563 1.171l-4.026 3.224a1.5 1.5 0 0 1-.937.329H5.529a1.5 1.5 0 0 1-.937-.328L.563 12.45A1.5 1.5 0 0 1 0 11.28V4.724a1.5 1.5 0 0 1 .563-1.171L4.589.329A1.5 1.5 0 0 1 5.526 0h4.945c.34 0 .67.116.937.328zM10.296 2H5.702L2 4.964v6.074L5.704 14h4.594L14 11.036V4.962L10.296 2zM8 4a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="account"><path fill-rule="evenodd" d="M9.195 9.965l-.568-.875a.25.25 0 0 1 .015-.294l.405-.5a.25.25 0 0 1 .283-.075l.938.36c.257-.183.543-.325.851-.42l.322-.988A.25.25 0 0 1 11.679 7h.642a.25.25 0 0 1 .238.173l.322.988c.308.095.594.237.851.42l.938-.36a.25.25 0 0 1 .283.076l.405.5a.25.25 0 0 1 .015.293l-.568.875c.113.297.18.616.193.95l.898.54a.25.25 0 0 1 .115.27l-.144.626a.25.25 0 0 1-.222.193l-1.115.098a3.015 3.015 0 0 1-.512.608l.165 1.18a.25.25 0 0 1-.138.259l-.577.281a.25.25 0 0 1-.29-.05l-.874-.905a3.035 3.035 0 0 1-.608 0l-.875.904a.25.25 0 0 1-.289.051l-.577-.281a.25.25 0 0 1-.138-.26l.165-1.18a3.015 3.015 0 0 1-.512-.607l-1.115-.098a.25.25 0 0 1-.222-.193l-.144-.626a.25.25 0 0 1 .115-.27l.898-.54c.013-.334.08-.653.193-.95zM6.789 8.023A12.845 12.845 0 0 0 6 8c-5.036 0-6 2.74-6 4.48C0 14.22.076 15 6 15c.553 0 1.055-.006 1.51-.02A5.977 5.977 0 0 1 6 11c0-1.083.287-2.1.79-2.977zM5.976 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zM12 12a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></symbol>
@@ -219,84 +285,84 @@ const module = {
 <symbol viewBox="0 0 16 16" id="volume-up"><path fill-rule="evenodd" d="M1 5h1v6H1a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm2 0l4.445-2.964A1 1 0 0 1 9 2.87v10.26a1 1 0 0 1-1.555.833L3 11V5zm10.283 7.89a.5.5 0 0 1-.66-.752A5.485 5.485 0 0 0 14.5 8c0-1.601-.687-3.09-1.865-4.128a.5.5 0 0 1 .661-.75A6.484 6.484 0 0 1 15.5 8a6.485 6.485 0 0 1-2.217 4.89zm-2.002-2.236a.5.5 0 1 1-.652-.758c.55-.472.871-1.157.871-1.896 0-.732-.315-1.411-.856-1.883a.5.5 0 0 1 .658-.753A3.492 3.492 0 0 1 12.5 8c0 1.033-.45 1.994-1.219 2.654z"/></symbol>
 <symbol viewBox="0 0 16 16" id="warning"><path d="M15.572 10.506c.867 1.42.375 3.247-1.098 4.082a3.184 3.184 0 0 1-1.57.412h-9.81C1.387 15 0 13.665 0 12.018a2.9 2.9 0 0 1 .427-1.512L5.332 2.47C6.2 1.05 8.096.577 9.57 1.412c.453.257.831.622 1.098 1.059l4.905 8.035zM8.89 3.479a1.014 1.014 0 0 0-.366-.353 1.053 1.053 0 0 0-1.412.353l-4.905 8.035a.967.967 0 0 0-.143.504c0 .549.462.994 1.032.994h9.81c.184 0 .364-.048.523-.137a.974.974 0 0 0 .366-1.361L8.889 3.479zM8 5a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1zm0 7a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="work"><path d="M12 3h1a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h1V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1zM6 2v1h4V2H6zM3 5a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H3zm1.5 1a.5.5 0 0 1 .5.5v6a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .5-.5zm7 0a.5.5 0 0 1 .5.5v6a.5.5 0 1 1-1 0v-6a.5.5 0 0 1 .5-.5z"/></symbol>
-  <path fill="#e24329" d="M2 14l9.38 9v-9l-4-12.28c-.205-.632-1.176-.632-1.38 0z"/>
-  <path fill="#e24329" d="M34 14l-9.38 9v-9l4-12.28c.205-.632 1.176-.632 1.38 0z"/>
-  <path fill="#e24329" d="M18,34.38 3,14 33,14 Z"/>
-  <path fill="#fc6d26" d="M18,34.38 11.38,14 2,14 6,25Z"/>
-  <path fill="#fc6d26" d="M18,34.38 24.62,14 34,14 30,25Z"/>
-  <path fill="#fca326" d="M2 14L.1 20.16c-.18.565 0 1.2.5 1.56l17.42 12.66z"/>
-  <path fill="#fca326" d="M34 14l1.9 6.16c.18.565 0 1.2-.5 1.56L18 34.38z"/>
-  <use href="#${icon}" x="0" y="15" width="21" height="21" fill="${fill[icon] || 'black'}"/>
+<path fill="#e24329" d="M2 14l9.38 9v-9l-4-12.28c-.205-.632-1.176-.632-1.38 0z"/>
+<path fill="#e24329" d="M34 14l-9.38 9v-9l4-12.28c.205-.632 1.176-.632 1.38 0z"/>
+<path fill="#e24329" d="M18,34.38 3,14 33,14 Z"/>
+<path fill="#fc6d26" d="M18,34.38 11.38,14 2,14 6,25Z"/>
+<path fill="#fc6d26" d="M18,34.38 24.62,14 34,14 30,25Z"/>
+<path fill="#fca326" d="M2 14L.1 20.16c-.18.565 0 1.2.5 1.56l17.42 12.66z"/>
+<path fill="#fca326" d="M34 14l1.9 6.16c.18.565 0 1.2-.5 1.56L18 34.38z"/>
+<use href="#${icon}" x="0" y="15" width="21" height="21" fill="${this.fill[icon] || 'black'}"/>
 
-  <filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter>
-	<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="black" stroke="black" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n}</text>
-	<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="white" stroke="white">${n}</text>
+<filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="black" stroke="black" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n}</text>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="white" stroke="white">${n}</text>
 </svg>
 `.trim();
 
-        const encoded = encodeURIComponent(data);
+    const encoded = encodeURIComponent(data);
 
-        const img = new Image();
-        img.onload = function () {
-            ctx.drawImage(img, 0, 0);
-            const link = document.getElementById('favicon');
-            link.href = canvas.toDataURL();
-        };
+    const img = new Image();
+    img.onload = function () {
+      ctx.drawImage(img, 0, 0);
+      const link = document.getElementById('favicon');
+      link.href = canvas.toDataURL();
+    };
 
-        img.onerror = function (e) { console.log(e); };
-        img.width = dim;
-        img.height = dim;
-        img.src = "data:image/svg+xml," + encoded;
-    },
+    img.onerror = function (e) { console.log(e); };
+    img.width = dim;
+    img.height = dim;
+    img.src = "data:image/svg+xml," + encoded;
+  },
 
-    handle(responseText) {
-        const json = JSON.parse(responseText);
+  handle(responseText) {
+    const json = JSON.parse(responseText);
 
-        if (json.pipelines.length) {
-            const details = json.pipelines[0].details;
-            const status = details.status;
-            const icon = status.icon;
-            const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
-            this.draw(status.icon, n + 1);
-        }
-    },
-  
-  	findLastIndex(arr, fn) {
-      for (let i = arr.length - 1; i >= 0; i--) {
-        if (fn(arr[i])) {
-            return i;
-        }
+    if (json.pipelines.length) {
+      const details = json.pipelines[0].details;
+      const status = details.status;
+      const icon = status.icon;
+      const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
+      this.draw(status.icon, n + 1);
+    }
+  },
+
+  findLastIndex(arr, fn) {
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (fn(arr[i])) {
+        return i;
       }
-      return -1;
-    },
-  
-    onload({ target }) {
-        if (/\/pipelines.json\b/.test(target.responseURL)) {
-            this.handle(target.responseText);
-        }
-    },
+    }
+    return -1;
+  },
+
+  onload({ target }) {
+    if (/\/pipelines.json\b/.test(target.responseURL)) {
+      this.handle(target.responseText);
+    }
+  },
 }
 
 setInterval(() => {
-    GM.xmlHttpRequest({
-        url: 'pipelines.json?scope=all&page=1',
-        method: 'GET',
-        headers: {
-            Accept: 'application/json',
-        },
-        onload: (response) => {
-            if (response.status >= 200 && response.status < 300) {
-                window.eval(`const module = ${uneval(module)}; module.handle(${JSON.stringify(response.responseText)})`);
-            }
-        }
-    });
+  GM.xmlHttpRequest({
+    url: 'pipelines.json?scope=all&page=1',
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+    onload: (response) => {
+      if (response.status >= 200 && response.status < 300) {
+        window.eval(`const module = ${uneval(module)}; module.handle(${JSON.stringify(response.responseText)})`);
+      }
+    }
+  });
 }, 60000);
 
 window.eval(`
-  const _send = XMLHttpRequest.prototype.send;
-  XMLHttpRequest.prototype.send = function (...args) {
-    this.setRequestHeader('If-None-Match', '');
-		this.addEventListener('load', (e) => {const module = ${uneval(module)}; module.onload(e); });
-    return _send.apply(this, args);
-  };
+const _send = XMLHttpRequest.prototype.send;
+XMLHttpRequest.prototype.send = function (...args) {
+this.setRequestHeader('If-None-Match', '');
+this.addEventListener('load', (e) => {const module = ${uneval(module)}; module.onload(e); });
+return _send.apply(this, args);
+};
 `);

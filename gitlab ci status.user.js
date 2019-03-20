@@ -5,10 +5,11 @@
 // @include  https://gitlab.com/*/pipelines
 // @version  0.2
 // @grant    GM.xmlHttpRequest
+// @grant    unsafeWindow
 // ==/UserScript==
 
 
-const module = {
+const mod = {
   fill: (() => {
     const colors = {
       '$green-50': '#f1fdf6',
@@ -58,7 +59,7 @@ const module = {
       '$red-800': '#8b2615',
       '$red-900': '#711e11',
       '$red-950': '#4b140b',
-      
+
       '$gray-darkest': '#c4c4c4',
       '$text-color': '#2e2e2e',
     };
@@ -76,11 +77,11 @@ const module = {
       status_created: '$gray-darkest',
       status_skipped: '$gray-darkest',
     };
-    
+
     return Object.keys(statusColors)
 	    .reduce((acc, status) => ({...acc, [status]: colors[statusColors[status]]}), {});
   })(),
-  
+
   draw(icon, n) {
     const dim = 32;
 
@@ -89,8 +90,7 @@ const module = {
     var ctx = canvas.getContext('2d');
 
 
-    var data = `
-<svg width="${dim}" height="${dim}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    var data = `<svg width="${dim}" height="${dim}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <symbol viewBox="0 0 16 16" id="abuse"><path d="M11.408.328l4.029 3.222A1.5 1.5 0 0 1 16 4.72v6.555a1.5 1.5 0 0 1-.563 1.171l-4.026 3.224a1.5 1.5 0 0 1-.937.329H5.529a1.5 1.5 0 0 1-.937-.328L.563 12.45A1.5 1.5 0 0 1 0 11.28V4.724a1.5 1.5 0 0 1 .563-1.171L4.589.329A1.5 1.5 0 0 1 5.526 0h4.945c.34 0 .67.116.937.328zM10.296 2H5.702L2 4.964v6.074L5.704 14h4.594L14 11.036V4.962L10.296 2zM8 4a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="account"><path fill-rule="evenodd" d="M9.195 9.965l-.568-.875a.25.25 0 0 1 .015-.294l.405-.5a.25.25 0 0 1 .283-.075l.938.36c.257-.183.543-.325.851-.42l.322-.988A.25.25 0 0 1 11.679 7h.642a.25.25 0 0 1 .238.173l.322.988c.308.095.594.237.851.42l.938-.36a.25.25 0 0 1 .283.076l.405.5a.25.25 0 0 1 .015.293l-.568.875c.113.297.18.616.193.95l.898.54a.25.25 0 0 1 .115.27l-.144.626a.25.25 0 0 1-.222.193l-1.115.098a3.015 3.015 0 0 1-.512.608l.165 1.18a.25.25 0 0 1-.138.259l-.577.281a.25.25 0 0 1-.29-.05l-.874-.905a3.035 3.035 0 0 1-.608 0l-.875.904a.25.25 0 0 1-.289.051l-.577-.281a.25.25 0 0 1-.138-.26l.165-1.18a3.015 3.015 0 0 1-.512-.607l-1.115-.098a.25.25 0 0 1-.222-.193l-.144-.626a.25.25 0 0 1 .115-.27l.898-.54c.013-.334.08-.653.193-.95zM6.789 8.023A12.845 12.845 0 0 0 6 8c-5.036 0-6 2.74-6 4.48C0 14.22.076 15 6 15c.553 0 1.055-.006 1.51-.02A5.977 5.977 0 0 1 6 11c0-1.083.287-2.1.79-2.977zM5.976 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zM12 12a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="admin"><path fill-rule="evenodd" d="M13.162 2.5a3.5 3.5 0 0 1-3.163 5.479L6.08 14.766a1.5 1.5 0 0 1-2.598-1.5L7.4 6.479A3.5 3.5 0 0 1 10.564 1L8.9 3.88l2.599 1.5 1.663-2.88zm-8.63 11.949a.5.5 0 1 0 .5-.866.5.5 0 0 0-.5.866z"/></symbol>
@@ -305,11 +305,11 @@ const module = {
     const img = new Image();
     img.onload = function () {
       ctx.drawImage(img, 0, 0);
-      const link = document.getElementById('favicon');
+      const link = unsafeWindow.document.getElementById('favicon');
       link.href = canvas.toDataURL();
     };
 
-    img.onerror = function (e) { console.log(e); };
+    img.onerror = function (e) { unsafeWindow.console.log(e); };
     img.width = dim;
     img.height = dim;
     img.src = "data:image/svg+xml," + encoded;
@@ -352,17 +352,28 @@ setInterval(() => {
     },
     onload: (response) => {
       if (response.status >= 200 && response.status < 300) {
-        window.eval(`const module = ${uneval(module)}; module.handle(${JSON.stringify(response.responseText)})`);
+          mod.handle(response.responseText);
       }
     }
   });
 }, 60000);
 
-window.eval(`
 const _send = XMLHttpRequest.prototype.send;
-XMLHttpRequest.prototype.send = function (...args) {
-this.setRequestHeader('If-None-Match', '');
-this.addEventListener('load', (e) => {const module = ${uneval(module)}; module.onload(e); });
-return _send.apply(this, args);
+unsafeWindow.XMLHttpRequest.prototype.send = function (...args) {
+    this.setRequestHeader('If-None-Match', '');
+    this.addEventListener('load', (e) => {
+        mod.onload(e);
+    });
+    return _send.apply(this, args);
 };
-`);
+
+
+const style = {
+  load() {
+    const style = unsafeWindow.document.createElement('style');
+    style.appendChild(unsafeWindow.document.createTextNode(`.table-mobile-content { white-space: nowrap; }`));
+    unsafeWindow.document.head.appendChild(style);
+  }
+};
+
+style.load();

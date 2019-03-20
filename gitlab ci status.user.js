@@ -8,6 +8,7 @@
 // @grant    unsafeWindow
 // @updateURL    https://github.com/sim-o/tampermonkey-scripts/raw/master/gitlab%20ci%20status.user.js
 // @downloadURL  https://github.com/sim-o/tampermonkey-scripts/raw/master/gitlab%20ci%20status.user.js
+// @supportURL   https://github.com/sim-o/tampermonkey-scripts/issues
 // ==/UserScript==
 
 

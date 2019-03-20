@@ -3,9 +3,11 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines
 // @include  https://gitlab.com/*/pipelines
-// @version  0.2
+// @version  0.3
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
+// @updateURL    https://github.com/sim-o/tampermonkey-scripts/raw/master/gitlab%20ci%20status.user.js
+// @downloadURL  https://github.com/sim-o/tampermonkey-scripts/raw/master/gitlab%20ci%20status.user.js
 // ==/UserScript==
 
 

@@ -3,7 +3,8 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines
 // @include  https://gitlab.com/*/pipelines
-// @version  0.4
+// @version  0.5
+// @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
 // @supportURL   https://github.com/sim-o/tampermonkey-scripts/issues

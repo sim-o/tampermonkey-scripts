@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.6
+// @version  0.7
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -319,7 +319,6 @@ const mod = {
 
     handle(responseText) {
         const json = JSON.parse(responseText);
-        console.log('response', json);
         const pipelines = json.pipelines
             .filter(({source, ref: {name}}) => source !== 'schedule' && ['master', 'stable'].includes(name));
 

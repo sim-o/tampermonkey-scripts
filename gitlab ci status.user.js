@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name     GitLab CI job status
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
-// @include  http://gitlab.ad.corelogic.asia/*/pipelines
-// @include  https://gitlab.com/*/pipelines
-// @version  0.5
+// @include  http://gitlab.ad.corelogic.asia/*/pipelines*
+// @include  https://gitlab.com/*/pipelines*
+// @version  0.6
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -12,87 +12,87 @@
 
 
 const mod = {
-  fill: (() => {
-    const colors = {
-      '$green-50': '#f1fdf6',
-      '$green-100': '#dcf5e7',
-      '$green-200': '#b3e6c8',
-      '$green-300': '#75d09b',
-      '$green-400': '#37b96d',
-      '$green-500': '#1aaa55',
-      '$green-600': '#168f48',
-      '$green-700': '#12753a',
-      '$green-800': '#0e5a2d',
-      '$green-900': '#0a4020',
-      '$green-950': '#072b15',
+    fill: (() => {
+        const colors = {
+            '$green-50': '#f1fdf6',
+            '$green-100': '#dcf5e7',
+            '$green-200': '#b3e6c8',
+            '$green-300': '#75d09b',
+            '$green-400': '#37b96d',
+            '$green-500': '#1aaa55',
+            '$green-600': '#168f48',
+            '$green-700': '#12753a',
+            '$green-800': '#0e5a2d',
+            '$green-900': '#0a4020',
+            '$green-950': '#072b15',
 
-      '$blue-50': '#f6fafe',
-      '$blue-100': '#e4f0fb',
-      '$blue-200': '#b8d6f4',
-      '$blue-300': '#73afea',
-      '$blue-400': '#2e87e0',
-      '$blue-500': '#1f78d1',
-      '$blue-600': '#1b69b6',
-      '$blue-700': '#17599c',
-      '$blue-800': '#134a81',
-      '$blue-900': '#0f3b66',
-      '$blue-950': '#0a2744',
+            '$blue-50': '#f6fafe',
+            '$blue-100': '#e4f0fb',
+            '$blue-200': '#b8d6f4',
+            '$blue-300': '#73afea',
+            '$blue-400': '#2e87e0',
+            '$blue-500': '#1f78d1',
+            '$blue-600': '#1b69b6',
+            '$blue-700': '#17599c',
+            '$blue-800': '#134a81',
+            '$blue-900': '#0f3b66',
+            '$blue-950': '#0a2744',
 
-      '$orange-50': '#fffaf4',
-      '$orange-100': '#fff1de',
-      '$orange-200': '#fed69f',
-      '$orange-300': '#fdbc60',
-      '$orange-400': '#fca121',
-      '$orange-500': '#fc9403',
-      '$orange-600': '#de7e00',
-      '$orange-700': '#c26700',
-      '$orange-800': '#a35200',
-      '$orange-900': '#853c00',
-      '$orange-950': '#592800',
+            '$orange-50': '#fffaf4',
+            '$orange-100': '#fff1de',
+            '$orange-200': '#fed69f',
+            '$orange-300': '#fdbc60',
+            '$orange-400': '#fca121',
+            '$orange-500': '#fc9403',
+            '$orange-600': '#de7e00',
+            '$orange-700': '#c26700',
+            '$orange-800': '#a35200',
+            '$orange-900': '#853c00',
+            '$orange-950': '#592800',
 
-      '$red-50': '#fef6f5',
-      '$red-100': '#fbe5e1',
-      '$red-200': '#f2b4a9',
-      '$red-300': '#e67664',
-      '$red-400': '#e05842',
-      '$red-500': '#db3b21',
-      '$red-600': '#c0341d',
-      '$red-700': '#a62d19',
-      '$red-800': '#8b2615',
-      '$red-900': '#711e11',
-      '$red-950': '#4b140b',
+            '$red-50': '#fef6f5',
+            '$red-100': '#fbe5e1',
+            '$red-200': '#f2b4a9',
+            '$red-300': '#e67664',
+            '$red-400': '#e05842',
+            '$red-500': '#db3b21',
+            '$red-600': '#c0341d',
+            '$red-700': '#a62d19',
+            '$red-800': '#8b2615',
+            '$red-900': '#711e11',
+            '$red-950': '#4b140b',
 
-      '$gray-darkest': '#c4c4c4',
-      '$text-color': '#2e2e2e',
-    };
+            '$gray-darkest': '#c4c4c4',
+            '$text-color': '#2e2e2e',
+        };
 
-    const statusColors = {
-      status_success: '$green-600',
-      status_failed: '$red-600',
-      status_pending: '$orange-600',
-      status_success_with_warnings: '$orange-600',
-      status_running: '$blue-600',
-      status_canceled: '$text-color',
-      status_disabled: '$text-color',
-      status_notfound: '$text-color',
-      status_manual: '$text-color',
-      status_created: '$gray-darkest',
-      status_skipped: '$gray-darkest',
-    };
+        const statusColors = {
+            status_success: '$green-600',
+            status_failed: '$red-600',
+            status_pending: '$orange-600',
+            status_success_with_warnings: '$orange-600',
+            status_running: '$blue-600',
+            status_canceled: '$text-color',
+            status_disabled: '$text-color',
+            status_notfound: '$text-color',
+            status_manual: '$text-color',
+            status_created: '$gray-darkest',
+            status_skipped: '$gray-darkest',
+        };
 
-    return Object.keys(statusColors)
-	    .reduce((acc, status) => ({...acc, [status]: colors[statusColors[status]]}), {});
-  })(),
+        return Object.keys(statusColors)
+            .reduce((acc, status) => ({...acc, [status]: colors[statusColors[status]]}), {});
+    })(),
 
-  draw(icon, n) {
-    const dim = 32;
+    draw(icon, n) {
+        const dim = 32;
 
-    var canvas = document.createElement('canvas');
-    canvas.width = canvas.height = dim;
-    var ctx = canvas.getContext('2d');
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = dim;
+        var ctx = canvas.getContext('2d');
 
 
-    var data = `<svg width="${dim}" height="${dim}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        var data = `<svg width="${dim}" height="${dim}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <symbol viewBox="0 0 16 16" id="abuse"><path d="M11.408.328l4.029 3.222A1.5 1.5 0 0 1 16 4.72v6.555a1.5 1.5 0 0 1-.563 1.171l-4.026 3.224a1.5 1.5 0 0 1-.937.329H5.529a1.5 1.5 0 0 1-.937-.328L.563 12.45A1.5 1.5 0 0 1 0 11.28V4.724a1.5 1.5 0 0 1 .563-1.171L4.589.329A1.5 1.5 0 0 1 5.526 0h4.945c.34 0 .67.116.937.328zM10.296 2H5.702L2 4.964v6.074L5.704 14h4.594L14 11.036V4.962L10.296 2zM8 4a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="account"><path fill-rule="evenodd" d="M9.195 9.965l-.568-.875a.25.25 0 0 1 .015-.294l.405-.5a.25.25 0 0 1 .283-.075l.938.36c.257-.183.543-.325.851-.42l.322-.988A.25.25 0 0 1 11.679 7h.642a.25.25 0 0 1 .238.173l.322.988c.308.095.594.237.851.42l.938-.36a.25.25 0 0 1 .283.076l.405.5a.25.25 0 0 1 .015.293l-.568.875c.113.297.18.616.193.95l.898.54a.25.25 0 0 1 .115.27l-.144.626a.25.25 0 0 1-.222.193l-1.115.098a3.015 3.015 0 0 1-.512.608l.165 1.18a.25.25 0 0 1-.138.259l-.577.281a.25.25 0 0 1-.29-.05l-.874-.905a3.035 3.035 0 0 1-.608 0l-.875.904a.25.25 0 0 1-.289.051l-.577-.281a.25.25 0 0 1-.138-.26l.165-1.18a3.015 3.015 0 0 1-.512-.607l-1.115-.098a.25.25 0 0 1-.222-.193l-.144-.626a.25.25 0 0 1 .115-.27l.898-.54c.013-.334.08-.653.193-.95zM6.789 8.023A12.845 12.845 0 0 0 6 8c-5.036 0-6 2.74-6 4.48C0 14.22.076 15 6 15c.553 0 1.055-.006 1.51-.02A5.977 5.977 0 0 1 6 11c0-1.083.287-2.1.79-2.977zM5.976 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zM12 12a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></symbol>
 <symbol viewBox="0 0 16 16" id="admin"><path fill-rule="evenodd" d="M13.162 2.5a3.5 3.5 0 0 1-3.163 5.479L6.08 14.766a1.5 1.5 0 0 1-2.598-1.5L7.4 6.479A3.5 3.5 0 0 1 10.564 1L8.9 3.88l2.599 1.5 1.663-2.88zm-8.63 11.949a.5.5 0 1 0 .5-.866.5.5 0 0 0-.5.866z"/></symbol>
@@ -302,62 +302,65 @@ const mod = {
 </svg>
 `.trim();
 
-    const encoded = encodeURIComponent(data);
+        const encoded = encodeURIComponent(data);
 
-    const img = new Image();
-    img.onload = function () {
-      ctx.drawImage(img, 0, 0);
-      const link = unsafeWindow.document.getElementById('favicon');
-      link.href = canvas.toDataURL();
-    };
+        const img = new Image();
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0);
+            const link = unsafeWindow.document.getElementById('favicon');
+            link.href = canvas.toDataURL();
+        };
 
-    img.onerror = function (e) { unsafeWindow.console.log(e); };
-    img.width = dim;
-    img.height = dim;
-    img.src = "data:image/svg+xml," + encoded;
-  },
+        img.onerror = function (e) { unsafeWindow.console.log(e); };
+        img.width = dim;
+        img.height = dim;
+        img.src = "data:image/svg+xml," + encoded;
+    },
 
-  handle(responseText) {
-    const json = JSON.parse(responseText);
+    handle(responseText) {
+        const json = JSON.parse(responseText);
+        console.log('response', json);
+        const pipelines = json.pipelines
+            .filter(({source, ref: {name}}) => source !== 'schedule' && ['master', 'stable'].includes(name));
 
-    if (json.pipelines.length) {
-      const details = json.pipelines[0].details;
-      const status = details.status;
-      const icon = status.icon;
-      const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
-      this.draw(status.icon, n + 1);
-    }
-  },
+        if (pipelines.length) {
+            const details = pipelines[0].details;
+            const status = details.status;
+            const icon = status.icon;
+            const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
+            this.draw(status.icon, n + 1);
+        }
+    },
 
-  findLastIndex(arr, fn) {
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (fn(arr[i])) {
-        return i;
-      }
-    }
-    return -1;
-  },
+    findLastIndex(arr, fn) {
+        for (let i = arr.length - 1; i >= 0; i--) {
+            if (fn(arr[i])) {
+                return i;
+            }
+        }
+        return -1;
+    },
 
-  onload({ target }) {
-    if (/\/pipelines.json\b/.test(target.responseURL)) {
-      this.handle(target.responseText);
-    }
-  },
+    onload({ target }) {
+        if (/\/pipelines.json\b/.test(target.responseURL)) {
+            this.handle(target.responseText);
+        }
+    },
 }
 
 setInterval(() => {
-  GM.xmlHttpRequest({
-    url: 'pipelines.json?scope=all&page=1',
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-    onload: (response) => {
-      if (response.status >= 200 && response.status < 300) {
-          mod.handle(response.responseText);
-      }
-    }
-  });
+    GM.xmlHttpRequest({
+        url: location.pathname + '.json?scope=all&page=1',
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+        },
+        onload: (response) => {
+            if (response.status >= 200 && response.status < 300) {
+                mod.handle(response.responseText);
+            }
+        }
+    });
 }, 60000);
 
 const _send = XMLHttpRequest.prototype.send;
@@ -371,11 +374,11 @@ unsafeWindow.XMLHttpRequest.prototype.send = function (...args) {
 
 
 const style = {
-  load() {
-    const style = unsafeWindow.document.createElement('style');
-    style.appendChild(unsafeWindow.document.createTextNode(`.table-mobile-content { white-space: nowrap; }`));
-    unsafeWindow.document.head.appendChild(style);
-  }
+    load() {
+        const style = unsafeWindow.document.createElement('style');
+        style.appendChild(unsafeWindow.document.createTextNode(`.table-mobile-content { white-space: nowrap; }`));
+        unsafeWindow.document.head.appendChild(style);
+    }
 };
 
 style.load();

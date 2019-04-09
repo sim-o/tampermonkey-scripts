@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.7
+// @version  0.8
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -324,10 +324,12 @@ const mod = {
 
         if (pipelines.length) {
             const details = pipelines[0].details;
-            const status = details.status;
-            const icon = status.icon;
+            let icon = details.status.icon;
+            if (details.stages.some(({status: {icon}}) => icon === 'status_warning')) {
+                icon = 'status_warning';
+            }
             const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
-            this.draw(status.icon, n + 1);
+            this.draw(icon, n + 1);
         }
     },
 

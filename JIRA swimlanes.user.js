@@ -6,6 +6,7 @@
 // @author       Simon Kerle
 // @run-at       document-start
 // @match        http://jira.*/secure/RapidBoard.jspa*
+// @match        https://jira.*/secure/RapidBoard.jspa*
 // @grant        GM_addStyle
 // ==/UserScript==
 

@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         JIRA Swimlanes
 // @namespace    https://github.com/sim-o/tampermonkey-scripts/jira.swimlanes.user.js
-// @version      0.1
+// @version      0.2
 // @description  Shrink JIRA swimlanes
 // @author       Simon Kerle
 // @run-at       document-start
-// @match        http://jira.*/secure/RapidBoard.jspa*
-// @match        https://jira.*/secure/RapidBoard.jspa*
+// @match        http://jira.rpdata.local/secure/RapidBoard.jspa*
+// @match        https://jira.rpdata.local/secure/RapidBoard.jspa*
 // @grant        GM_addStyle
 // ==/UserScript==
 

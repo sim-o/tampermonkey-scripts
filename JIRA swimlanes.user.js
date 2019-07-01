@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA Swimlanes
 // @namespace    https://github.com/sim-o/tampermonkey-scripts/jira.swimlanes.user.js
-// @version      0.3
+// @version      0.4
 // @description  Shrink JIRA swimlanes
 // @author       Simon Kerle
 // @match        http://jira.rpdata.local/secure/RapidBoard.jspa*
@@ -23,8 +23,8 @@
             GM_addStyle(`
                 body.hidden-${index} .ghx-columns .ghx-column:nth-of-type(${index}),
                 body.hidden-${index} .ghx-column-headers .ghx-column:nth-of-type(${index}) { width: 20px !important; overflow-x: hidden !important; }
-                body.hidden-${index} .ghx-column-headers .ghx-column:nth-of-type(${index}) { white-space: pre; }
-                #ghx-column-headers .ghx-column { cursor: pointer; }
+                body.hidden-${index} .ghx-columns .ghx-column:nth-of-type(${index}) > * { display: none; }
+                body.hidden-${index} .ghx-column-headers .ghx-column:nth-of-type(${index}) h2 { white-space: pre; transform: rotate(90deg); }
             `);
         }
         toggled[index] = !toggled[index];
@@ -63,4 +63,9 @@
     console.log('loaded', loaded);
 
     Object.entries(JSON.parse(loaded)).forEach(([key, value]) => { if (value) toggle(key); });
+
+    setTimeout(() => GM_addStyle(`
+        .ghx-column-headers .ghx-column { cursor: pointer; }
+        .ghx-column-headers .ghx-column h2 { transition: 300ms all; transform-origin: 12px 50%; }
+    `), 10);
 })();

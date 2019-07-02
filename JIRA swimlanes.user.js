@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA Swimlanes
 // @namespace    https://github.com/sim-o/tampermonkey-scripts/jira.swimlanes.user.js
-// @version      0.5
+// @version      0.6
 // @description  Shrink JIRA swimlanes
 // @author       Simon Kerle
 // @match        http://jira.rpdata.local/secure/RapidBoard.jspa*
@@ -21,10 +21,11 @@
         console.log('toggling', index);
         if (toggled[index] === undefined) {
             GM_addStyle(`
-                body.hidden-${index} .ghx-swimlane:not(.ghx-drag-in-progress) .ghx-columns .ghx-column:nth-of-type(${index}),
-                body.hidden-${index} .ghx-swimlane:not(.ghx-drag-in-progress) .ghx-column-headers .ghx-column:nth-of-type(${index}) { width: 20px !important; overflow-x: hidden !important; }
-                body.hidden-${index} .ghx-swimlane:not(.ghx-drag-in-progress) .ghx-columns .ghx-column:nth-of-type(${index}) > * { display: none; }
-                body.hidden-${index} .ghx-swimlane:not(.ghx-drag-in-progress) .ghx-column-headers .ghx-column:nth-of-type(${index}) h2 { white-space: pre; transform: rotate(90deg); }
+                body.hidden-${index} .ghx-columns .ghx-column:nth-of-type(${index}),
+                body.hidden-${index} .ghx-column-headers .ghx-column:nth-of-type(${index}),
+                body.hidden-${index} .ghx-zone-overlay-table .ghx-zone-overlay-column:nth-of-type(${index}) { width: 20px !important; overflow-x: hidden !important; }
+                body.hidden-${index} .ghx-columns .ghx-column:nth-of-type(${index}) > * { display: none; }
+                body.hidden-${index} .ghx-column-headers .ghx-column:nth-of-type(${index}) h2 { white-space: pre; transform: rotate(90deg); }
             `);
         }
         toggled[index] = !toggled[index];

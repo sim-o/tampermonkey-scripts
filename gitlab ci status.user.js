@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.8
+// @version  0.9
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -12,6 +12,11 @@
 
 
 const mod = {
+    n: undefined,
+    icon: 'timer',
+    psxProjectId: undefined,
+    mergeRequests: undefined,
+
     fill: (() => {
         const colors = {
             '$green-50': '#f1fdf6',
@@ -84,7 +89,11 @@ const mod = {
             .reduce((acc, status) => ({...acc, [status]: colors[statusColors[status]]}), {});
     })(),
 
-    draw(icon, n) {
+    draw() {
+        const n = this.n,
+            icon = this.icon,
+            mergeRequests = this.mergeRequests;
+
         const dim = 32;
 
         var canvas = document.createElement('canvas');
@@ -297,8 +306,9 @@ const mod = {
 <use href="#${icon}" x="0" y="15" width="21" height="21" fill="${this.fill[icon] || 'black'}"/>
 
 <filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter>
-<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="black" stroke="black" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n}</text>
-<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="white" stroke="white">${n}</text>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="black" stroke="black" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n === undefined ? '' : n}</text>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="white" stroke="white">${n === undefined ? '' : n}</text>
+<text x="50%" y="80%" font-family="Segoe UI" font-size="38" font-weight="bold" text-anchor="middle" fill="#ffffff" stroke="#333333">${mergeRequests ? '*': ''}</text>
 </svg>
 `.trim();
 
@@ -317,7 +327,7 @@ const mod = {
         img.src = "data:image/svg+xml," + encoded;
     },
 
-    handle(responseText) {
+    handlePipelines(responseText) {
         const json = JSON.parse(responseText);
         const pipelines = json.pipelines
             .filter(({source, ref: {name}}) => source !== 'schedule' && ['master', 'stable'].includes(name));
@@ -328,8 +338,9 @@ const mod = {
             if (details.stages.some(({status: {icon}}) => icon === 'status_warning')) {
                 icon = 'status_warning';
             }
-            const n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
-            this.draw(icon, n + 1);
+            this.n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
+            this.icon = icon;
+            this.draw();
         }
     },
 
@@ -344,24 +355,72 @@ const mod = {
 
     onload({ target }) {
         if (/\/pipelines.json\b/.test(target.responseURL)) {
-            this.handle(target.responseText);
+            this.handlePipelines(target.responseText);
+        }
+    },
+
+    loadPipelines() {
+        GM.xmlHttpRequest({
+            url: location.pathname + '.json?scope=all&page=1',
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+            },
+            onload: (response) => {
+                if (response.status >= 200 && response.status < 300) {
+                    mod.handlePipelines(response.responseText);
+                }
+            }
+        });
+    },
+
+    loadMergeRequests() {
+        if (!this.psxProjectId) {
+            const projectName = location.pathname.split('/').slice(1, 3).join(' / ');
+            GM.xmlHttpRequest({
+                url: `/api/v4/projects?search=${projectName}`,
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                },
+                onload: (response) => {
+                    if (response.status >= 200 && response.status < 300) {
+                        const [{id}] = JSON.parse(response.responseText)
+                            .filter(({name_with_namespace}) => name_with_namespace === projectName);
+                        this.psxProjectId = id;
+                        this.loadMergeRequests();
+                    }
+                }
+            });
+        } else {
+            GM.xmlHttpRequest({
+                url: `/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened`,
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                },
+                onload: (response) => {
+                    if (response.status >= 200 && response.status < 300) {
+                        const ignoreAuthors = [
+                            'skerle', 'ddey', 'umasood', 'aiyyatil', 'ichen', 'dshanmugam', 'sahuja',
+                        ];
+                        const json = JSON.parse(response.responseText);
+                        console.log('merge requests', json);
+                        const review = json.filter(mr => !ignoreAuthors.includes(mr.author.username)).length;
+                        this.mergeRequests = review;
+                        this.draw();
+                    }
+                }
+            });
         }
     },
 }
 
+mod.loadMergeRequests();
+
 setInterval(() => {
-    GM.xmlHttpRequest({
-        url: location.pathname + '.json?scope=all&page=1',
-        method: 'GET',
-        headers: {
-            Accept: 'application/json',
-        },
-        onload: (response) => {
-            if (response.status >= 200 && response.status < 300) {
-                mod.handle(response.responseText);
-            }
-        }
-    });
+    mod.loadPipelines();
+    mod.loadMergeRequests();
 }, 60000);
 
 const _send = XMLHttpRequest.prototype.send;

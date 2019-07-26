@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.9
+// @version  0.8
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -394,7 +394,7 @@ const mod = {
             });
         } else {
             GM.xmlHttpRequest({
-                url: `/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened`,
+                url: `/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened&approver_ids=None`,
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',

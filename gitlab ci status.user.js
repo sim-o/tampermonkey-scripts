@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.8
+// @version  0.9
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow

@@ -3,13 +3,27 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.9
+// @version  0.11
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
 // @supportURL   https://github.com/sim-o/tampermonkey-scripts/issues
 // ==/UserScript==
 
+const get = url => new Promise((succeed, fail) => {
+    GM.xmlHttpRequest({
+        url,
+        method: 'GET',
+        headers: {Accept: 'application/json'},
+        onload: (response) => {
+            if (response.status >= 200 && response.status < 300) {
+                succeed(JSON.parse(response.responseText));
+            } else {
+                fail(response);
+            }
+        }
+    });
+});
 
 const mod = {
     n: undefined,
@@ -306,9 +320,10 @@ const mod = {
 <use href="#${icon}" x="0" y="15" width="21" height="21" fill="${this.fill[icon] || 'black'}"/>
 
 <filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter>
-<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="black" stroke="black" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n === undefined ? '' : n}</text>
-<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="white" stroke="white">${n === undefined ? '' : n}</text>
-<text x="50%" y="80%" font-family="Segoe UI" font-size="38" font-weight="bold" text-anchor="middle" fill="#ffffff" stroke="#333333">${mergeRequests ? '*': ''}</text>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="#000000" stroke="#000000" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${n === undefined ? '' : n}</text>
+<text x="36" y="95%" font-family="Segoe UI" font-size="30" font-weight="bold" text-anchor="end" fill="#ffffff" stroke="#ffffff">${n === undefined ? '' : n}</text>
+<text x="35%" y="45%" font-family="Segoe UI" font-size="20" font-weight="bold" text-anchor="end" fill="#000000" stroke="#000000" transform="translate(50% 50%) scale(1.2) translate(-50% -50%)" filter="url(#blur)">${mergeRequests ? mergeRequests: ''}</text>
+<text x="35%" y="45%" font-family="Segoe UI" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff" stroke="#ffffff">${mergeRequests ? mergeRequests: ''}</text>
 </svg>
 `.trim();
 
@@ -327,8 +342,7 @@ const mod = {
         img.src = "data:image/svg+xml," + encoded;
     },
 
-    handlePipelines(responseText) {
-        const json = JSON.parse(responseText);
+    handlePipelines(json) {
         const pipelines = json.pipelines
             .filter(({source, ref: {name}}) => source !== 'schedule' && ['master', 'stable'].includes(name));
 
@@ -355,63 +369,30 @@ const mod = {
 
     onload({ target }) {
         if (/\/pipelines.json\b/.test(target.responseURL)) {
-            this.handlePipelines(target.responseText);
+            this.handlePipelines(JSON.parse(target.responseText));
         }
     },
 
-    loadPipelines() {
-        GM.xmlHttpRequest({
-            url: location.pathname + '.json?scope=all&page=1',
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-            },
-            onload: (response) => {
-                if (response.status >= 200 && response.status < 300) {
-                    mod.handlePipelines(response.responseText);
-                }
-            }
-        });
+    async loadPipelines() {
+        const json = await get(location.pathname + '.json?scope=all&page=1');
+        mod.handlePipelines(json);
     },
 
-    loadMergeRequests() {
+    async loadMergeRequests() {
         if (!this.psxProjectId) {
             const projectName = location.pathname.split('/').slice(1, 3).join(' / ');
-            GM.xmlHttpRequest({
-                url: `/api/v4/projects?search=${projectName}`,
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                },
-                onload: (response) => {
-                    if (response.status >= 200 && response.status < 300) {
-                        const [{id}] = JSON.parse(response.responseText)
-                            .filter(({name_with_namespace}) => name_with_namespace === projectName);
-                        this.psxProjectId = id;
-                        this.loadMergeRequests();
-                    }
-                }
-            });
+            const json = await get(`/api/v4/projects?search=${projectName}`);
+            const [{id}] = json.filter(({name_with_namespace}) => name_with_namespace === projectName);
+            this.psxProjectId = id;
+            this.loadMergeRequests();
         } else {
-            GM.xmlHttpRequest({
-                url: `/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened&approver_ids=None`,
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                },
-                onload: (response) => {
-                    if (response.status >= 200 && response.status < 300) {
-                        const ignoreAuthors = [
-                            'skerle', 'ddey', 'umasood', 'aiyyatil', 'ichen', 'dshanmugam', 'sahuja',
-                        ];
-                        const json = JSON.parse(response.responseText);
-                        console.log('merge requests', json);
-                        const review = json.filter(mr => !ignoreAuthors.includes(mr.author.username)).length;
-                        this.mergeRequests = review;
-                        this.draw();
-                    }
-                }
-            });
+            const ignoreAuthors = ['skerle', 'ddey', 'umasood', 'aiyyatil', 'ichen', 'dshanmugam', 'sahuja'];
+            const mergeRequests = (await get(`/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened&per_page=100`))
+                .filter(mr => !ignoreAuthors.includes(mr.author.username));
+            const mergeRequestApprovals = await Promise.all(mergeRequests.map(mr => get(`/api/v4/projects/${this.psxProjectId}/merge_requests/${mr.iid}/approvals`)));
+            const review = mergeRequestApprovals.filter(mra => mra.approvals_left && mra.user_can_approve && !mra.user_has_approved);
+            this.mergeRequests = review.length;
+            this.draw();
         }
     },
 }

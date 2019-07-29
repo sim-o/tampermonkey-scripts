@@ -386,7 +386,7 @@ const mod = {
             this.psxProjectId = id;
             this.loadMergeRequests();
         } else {
-            const ignoreAuthors = ['skerle', 'ddey', 'umasood', 'aiyyatil', 'ichen', 'dshanmugam', 'sahuja'];
+            const ignoreAuthors = ['skerle', 'ddey', 'umasood', 'aiyyattil', 'ichen', 'dshanmugam', 'sahuja'];
             const mergeRequests = (await get(`/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened&per_page=100`))
                 .filter(mr => !ignoreAuthors.includes(mr.author.username));
             const mergeRequestApprovals = await Promise.all(mergeRequests.map(mr => get(`/api/v4/projects/${this.psxProjectId}/merge_requests/${mr.iid}/approvals`)));

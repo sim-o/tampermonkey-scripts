@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA Swimlanes
 // @namespace    https://github.com/sim-o/tampermonkey-scripts/jira.swimlanes.user.js
-// @version      0.6
+// @version      0.7
 // @description  Shrink JIRA swimlanes
 // @author       Simon Kerle
 // @match        http://jira.rpdata.local/secure/RapidBoard.jspa*
@@ -65,8 +65,19 @@
 
     Object.entries(JSON.parse(loaded)).forEach(([key, value]) => { if (value) toggle(key); });
 
-    setTimeout(() => GM_addStyle(`
-        .ghx-column-headers .ghx-column { cursor: pointer; }
-        .ghx-column-headers .ghx-column h2 { transition: 300ms all; transform-origin: 12px 50%; }
-    `), 10);
+    setTimeout(() => {
+        GM_addStyle(`
+            .ghx-column-headers .ghx-column { cursor: pointer; }
+            .ghx-column-headers .ghx-column h2 { transition: 300ms all; transform-origin: 12px 50%; }
+            .ghx-issue { pointer-events: none; }
+            .ghx-issue .ghx-key { display: inline-block; pointer-events: auto; }
+            .ghx-issue .ghx-key::after { content: ' '; display: block; width:100%; height: 100%; }
+        `);
+        GH.MouseUtils.openInSameTab = (e) => {
+            e.preventDefault();
+            const key = jira.app.issue.getIssueKey(e);
+            window.open(`/browse/${key}`);
+            throw 'stop';
+        };
+    }, 10);
 })();

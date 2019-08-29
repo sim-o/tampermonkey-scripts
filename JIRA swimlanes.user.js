@@ -69,9 +69,6 @@
         GM_addStyle(`
             .ghx-column-headers .ghx-column { cursor: pointer; }
             .ghx-column-headers .ghx-column h2 { transition: 300ms all; transform-origin: 12px 50%; }
-            .ghx-issue { pointer-events: none; }
-            .ghx-issue .ghx-key { display: inline-block; pointer-events: auto; }
-            .ghx-issue .ghx-key::after { content: ' '; display: block; width:100%; height: 100%; }
         `);
         GH.MouseUtils.openInSameTab = (e) => {
             e.preventDefault();

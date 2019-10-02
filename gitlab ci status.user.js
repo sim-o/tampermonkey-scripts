@@ -3,7 +3,7 @@
 // @namespace simon.kerle@corelogic.com.au/GitlabCIStatus
 // @include  http://gitlab.ad.corelogic.asia/*/pipelines*
 // @include  https://gitlab.com/*/pipelines*
-// @version  0.13
+// @version  0.14
 // @run-at   document-start
 // @grant    GM.xmlHttpRequest
 // @grant    unsafeWindow
@@ -352,7 +352,7 @@ const mod = {
             if (details.stages.some(({status: {icon}}) => icon === 'status_warning')) {
                 icon = 'status_warning';
             }
-            this.n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon);
+            this.n = this.findLastIndex(details.stages, ({status: {icon: i}}) => i === icon) + 1;
             this.icon = icon;
             this.draw();
         }
@@ -386,7 +386,7 @@ const mod = {
             this.psxProjectId = id;
             this.loadMergeRequests();
         } else {
-            const ignoreAuthors = ['skerle', 'ddey', 'umasood', 'aiyyattil', 'ichen', 'jlui', 'sahuja'];
+            const ignoreAuthors = ['skerle', 'ddey', 'umasood', 'pabitra', 'ichen', 'jlui', 'sahuja'];
             const mergeRequests = (await get(`/api/v4/projects/${this.psxProjectId}/merge_requests?state=opened&per_page=100`))
                 .filter(mr => !ignoreAuthors.includes(mr.author.username));
             const mergeRequestApprovals = await Promise.all(mergeRequests.map(mr => get(`/api/v4/projects/${this.psxProjectId}/merge_requests/${mr.iid}/approvals`)));

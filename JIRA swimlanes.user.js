@@ -67,7 +67,7 @@
 
     setTimeout(() => {
         GM_addStyle(`
-            .ghx-column-headers .ghx-column { cursor: pointer; }
+            .ghx-column-headers .ghx-column { cursor: pointer; overflow: hidden; }
             .ghx-column-headers .ghx-column h2 { transition: 300ms all; transform-origin: 12px 50%; }
         `);
         GH.MouseUtils.openInSameTab = (e) => {
